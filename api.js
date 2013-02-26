@@ -259,12 +259,12 @@ var cryptico = (function() {
     }
 
     // Generates an RSA key from a passphrase.
-    my.generateRSAKey = function(passphrase, bitlength)
+    my.generateRSAKey = function(bitlength, exponent)
     {
         //Removed SeededRandom as we want to create a
         //truly random key.
         var rsa = new RSAKey();
-        rsa.generate(bitlength, "03");
+        rsa.generate(bitlength, exponent);
         return rsa;
     }
 
