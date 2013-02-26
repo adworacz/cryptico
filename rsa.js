@@ -131,7 +131,7 @@ function RSAToJSON()
         e: this.e.toString(16),
         n: this.n.toString(16),
         p: this.p.toString(16),
-        q: this.q.toString(16),
+        q: this.q.toString(16)
     }
 }
 
@@ -224,7 +224,9 @@ function RSASetPrivateEx(N, E, D, P, Q, DP, DQ, C)
 // Generate a new random private key B bits long, using public expt E
 function RSAGenerate(B, E)
 {
-    var rng = new SeededRandom();
+    //Changed to SecureRandom as we want to create a
+    //truly random key.
+    var rng = new SecureRandom();
     var qs = B >> 1;
     this.e = parseInt(E, 16);
     var ee = new BigInteger(E, 16);
@@ -304,7 +306,7 @@ RSAKey.prototype.decrypt = RSADecrypt;
 // This software is licensed under the terms of the MIT License.
 // http://www.opensource.org/licenses/mit-license.php
 //
-// The above copyright and license notice shall be 
+// The above copyright and license notice shall be
 // included in all copies or substantial portions of the Software.
 //
 // Depends on:

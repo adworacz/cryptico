@@ -48,7 +48,7 @@ var cryptico = (function() {
         return r;
     }
 
-    my.b64to256 = function(t) 
+    my.b64to256 = function(t)
     {
         var c, n;
         var r = '', s = 0, a = 0;
@@ -64,7 +64,7 @@ var cryptico = (function() {
             }
         }
         return r;
-    }    
+    }
 
     my.b16to64 = function(h) {
         var i;
@@ -132,12 +132,12 @@ var cryptico = (function() {
         if (k == 1) ret += int2char(slop << 2);
         return ret;
     }
-    
+
     // Converts a string to a byte array.
     my.string2bytes = function(string)
     {
         var bytes = new Array();
-        for(var i = 0; i < string.length; i++) 
+        for(var i = 0; i < string.length; i++)
         {
             bytes.push(string.charCodeAt(i));
         }
@@ -151,10 +151,10 @@ var cryptico = (function() {
         for(var i = 0; i < bytes.length; i++)
         {
             string += String.fromCharCode(bytes[i]);
-        }   
+        }
         return string;
     }
-    
+
     // Returns a XOR b, where a and b are 16-byte byte arrays.
     my.blockXOR = function(a, b)
     {
@@ -165,7 +165,7 @@ var cryptico = (function() {
         }
         return xor;
     }
-    
+
     // Returns a 16-byte initialization vector.
     my.blockIV = function()
     {
@@ -174,7 +174,7 @@ var cryptico = (function() {
         r.nextBytes(IV);
         return IV;
     }
-    
+
     // Returns a copy of bytes with zeros appended to the end
     // so that the (length of bytes) % 16 == 0.
     my.pad16 = function(bytes)
@@ -187,7 +187,7 @@ var cryptico = (function() {
         }
         return newBytes;
     }
-    
+
     // Removes trailing zeros from a byte array.
     my.depad = function(bytes)
     {
@@ -198,7 +198,7 @@ var cryptico = (function() {
         }
         return newBytes;
     }
-    
+
     // AES CBC Encryption.
     my.encryptAESCBC = function(plaintext, key)
     {
@@ -238,15 +238,15 @@ var cryptico = (function() {
         decryptedBlocks = my.depad(decryptedBlocks);
         return my.bytes2string(decryptedBlocks);
     }
-    
+
     // Wraps a string to 60 characters.
-    my.wrap60 = function(string) 
+    my.wrap60 = function(string)
     {
         var outstr = "";
         for(var i = 0; i < string.length; i++) {
             if(i % 60 == 0 && i != 0) outstr += "\n";
             outstr += string[i]; }
-        return outstr; 
+        return outstr;
     }
 
     // Generate a random key for the AES-encrypted message.
@@ -261,25 +261,26 @@ var cryptico = (function() {
     // Generates an RSA key from a passphrase.
     my.generateRSAKey = function(passphrase, bitlength)
     {
-        Math.seedrandom(sha256.hex(passphrase));
+        //Removed SeededRandom as we want to create a
+        //truly random key.
         var rsa = new RSAKey();
         rsa.generate(bitlength, "03");
         return rsa;
     }
 
     // Returns the ascii-armored version of the public key.
-    my.publicKeyString = function(rsakey) 
+    my.publicKeyString = function(rsakey)
     {
         pubkey = my.b16to64(rsakey.n.toString(16));
-        return pubkey; 
+        return pubkey;
     }
-    
+
     // Returns an MD5 sum of a publicKeyString for easier identification.
     my.publicKeyID = function(publicKeyString)
     {
         return MD5(publicKeyString);
     }
-    
+
     my.publicKeyFromString = function(string)
     {
         var N = my.b64to16(string.split("|")[0]);
@@ -288,7 +289,7 @@ var cryptico = (function() {
         rsa.setPublic(N, E);
         return rsa
     }
-    
+
     my.encrypt = function(plaintext, publickeystring, signingkey)
     {
         var cipherblock = "";
@@ -310,7 +311,7 @@ var cryptico = (function() {
             plaintext += "::52cee64bb3a38f6403386519a39ac91c::";
             plaintext += signString;
         }
-        cipherblock += my.encryptAESCBC(plaintext, aeskey);    
+        cipherblock += my.encryptAESCBC(plaintext, aeskey);
         return {status: "success", cipher: cipherblock};
     }
 
@@ -330,16 +331,16 @@ var cryptico = (function() {
             var signature = my.b64to16(plaintext[2]);
             if(publickey.verifyString(plaintext[0], signature))
             {
-                return {status: "success", 
-                        plaintext: plaintext[0], 
-                        signature: "verified", 
+                return {status: "success",
+                        plaintext: plaintext[0],
+                        signature: "verified",
                         publicKeyString: my.publicKeyString(publickey)};
             }
             else
             {
-                return {status: "success", 
-                        plaintext: plaintext[0], 
-                        signature: "forged", 
+                return {status: "success",
+                        plaintext: plaintext[0],
+                        signature: "forged",
                         publicKeyString: my.publicKeyString(publickey)};
             }
         }
