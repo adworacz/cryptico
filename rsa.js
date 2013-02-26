@@ -108,9 +108,7 @@ function RSADoPublic(x)
 }
 
 // Return the PKCS#1 RSA encryption of "text" as an even-length hex string
-
-
-function RSAEncrypt(text)
+function RSAEncryptPublic(text)
 {
     var m = pkcs1pad2(text, (this.n.bitLength() + 7) >> 3);
     if (m == null) return null;
@@ -119,6 +117,17 @@ function RSAEncrypt(text)
     var h = c.toString(16);
     if ((h.length & 1) == 0) return h;
     else return "0" + h;
+}
+
+
+// Return the PKCS#1 RSA decryption of "ctext".
+// "ctext" is an even-length hex string and the output is a plain string.
+function RSADecryptPublic(ctext)
+{
+    var c = parseBigInt(ctext, 16);
+    var m = this.doPublic(c);
+    if (m == null) return null;
+    return pkcs1unpad2(m, (this.n.bitLength() + 7) >> 3);
 }
 
 function RSAToJSON()
@@ -154,7 +163,8 @@ RSAKey.prototype.doPublic = RSADoPublic;
 
 // public
 RSAKey.prototype.setPublic = RSASetPublic;
-RSAKey.prototype.encrypt = RSAEncrypt;
+RSAKey.prototype.encryptPublic = RSAEncryptPublic;
+RSAKey.prototype.decryptPublic = RSADecryptPublic;
 RSAKey.prototype.toJSON = RSAToJSON;
 RSAKey.parse = RSAParse;
 
@@ -275,9 +285,22 @@ function RSADoPrivate(x)
     return xp.subtract(xq).multiply(this.coeff).mod(this.p).multiply(this.q).add(xq);
 }
 
+
+// Return the PKCS#1 RSA encryption of "text" as an even-length hex string
+function RSAEncryptPrivate(text)
+{
+    var m = pkcs1pad2(text, (this.n.bitLength() + 7) >> 3);
+    if (m == null) return null;
+    var c = this.doPrivate(m);
+    if (c == null) return null;
+    var h = c.toString(16);
+    if ((h.length & 1) == 0) return h;
+    else return "0" + h;
+}
+
 // Return the PKCS#1 RSA decryption of "ctext".
 // "ctext" is an even-length hex string and the output is a plain string.
-function RSADecrypt(ctext)
+function RSADecryptPrivate(ctext)
 {
     var c = parseBigInt(ctext, 16);
     var m = this.doPrivate(c);
@@ -292,8 +315,8 @@ RSAKey.prototype.doPrivate = RSADoPrivate;
 RSAKey.prototype.setPrivate = RSASetPrivate;
 RSAKey.prototype.setPrivateEx = RSASetPrivateEx;
 RSAKey.prototype.generate = RSAGenerate;
-RSAKey.prototype.decrypt = RSADecrypt;
-
+RSAKey.prototype.encryptPrivate = RSAEncryptPrivate;
+RSAKey.prototype.decryptPrivate = RSADecryptPrivate;
 
 //
 // rsa-sign.js - adding signing functions to RSAKey class.
@@ -457,30 +480,3 @@ RSAKey.prototype.signStringWithSHA256 = _rsasign_signStringWithSHA256;
 
 RSAKey.prototype.verifyString = _rsasign_verifyString;
 RSAKey.prototype.verifyHexSignatureForMessage = _rsasign_verifyHexSignatureForMessage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -297,7 +297,7 @@ var cryptico = (function() {
         try
         {
             var publickey = my.publicKeyFromString(publickeystring);
-            cipherblock += my.b16to64(publickey.encrypt(my.bytes2string(aeskey))) + "?";
+            cipherblock += my.b16to64(publickey.encryptPublic(my.bytes2string(aeskey))) + "?";
         }
         catch(err)
         {
@@ -318,7 +318,60 @@ var cryptico = (function() {
     my.decrypt = function(ciphertext, key)
     {
         var cipherblock = ciphertext.split("?");
-        var aeskey = key.decrypt(my.b64to16(cipherblock[0]));
+        var aeskey = key.decryptPrivate(my.b64to16(cipherblock[0]));
+        if(aeskey == null)
+        {
+            return {status: "failure"};
+        }
+        aeskey = my.string2bytes(aeskey);
+        var plaintext = my.decryptAESCBC(cipherblock[1], aeskey).split("::52cee64bb3a38f6403386519a39ac91c::");
+        if(plaintext.length == 3)
+        {
+            var publickey = my.publicKeyFromString(plaintext[1]);
+            var signature = my.b64to16(plaintext[2]);
+            if(publickey.verifyString(plaintext[0], signature))
+            {
+                return {status: "success",
+                        plaintext: plaintext[0],
+                        signature: "verified",
+                        publicKeyString: my.publicKeyString(publickey)};
+            }
+            else
+            {
+                return {status: "success",
+                        plaintext: plaintext[0],
+                        signature: "forged",
+                        publicKeyString: my.publicKeyString(publickey)};
+            }
+        }
+        else
+        {
+            return {status: "success", plaintext: plaintext[0], signature: "unsigned"};
+        }
+    }
+
+    my.encryptPrivate = function(plaintext, keypair)
+    {
+        var cipherblock = "";
+        var aeskey = my.generateAESKey();
+        try
+        {
+            cipherblock += my.b16to64(keypair.encryptPrivate(my.bytes2string(aeskey))) + "?";
+        }
+        catch(err)
+        {
+            return {status: "Invalid public key"};
+        }
+        //No signing support for now.
+        cipherblock += my.encryptAESCBC(plaintext, aeskey);
+        return {status: "success", cipher: cipherblock};
+    }
+
+    //Decrypts a message using the public key of the priv/pub keypair.
+    my.decryptPublic = function(ciphertext, key)
+    {
+        var cipherblock = ciphertext.split("?");
+        var aeskey = key.decryptPublic(my.b64to16(cipherblock[0]));
         if(aeskey == null)
         {
             return {status: "failure"};
