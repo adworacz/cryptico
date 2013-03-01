@@ -73,7 +73,7 @@ function pkcs1pad2(s, n)
 }
 
 //Deterministic pkcs1pad2.
-function pkcs1pad2_secure(s, n)
+function pkcs1pad2_deterministic(s, n)
 {
     Math.seedrandom(sha256.hex(s));
     if (n < s.length + 11)
