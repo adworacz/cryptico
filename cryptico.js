@@ -2636,6 +2636,51 @@ function pkcs1pad2(s, n)
     return new BigInteger(ba);
 }
 
+//Deterministic pkcs1pad2.
+function pkcs1pad2_secure(s, n)
+{
+    Math.seedrandom(sha256.hex(s));
+    if (n < s.length + 11)
+    { // TODO: fix for utf-8
+        //alert("Message too long for RSA (n=" + n + ", l=" + s.length + ")");
+        //return null;
+        throw "Message too long for RSA (n=" + n + ", l=" + s.length + ")";
+    }
+    var ba = new Array();
+    var i = s.length - 1;
+    while (i >= 0 && n > 0)
+    {
+        var c = s.charCodeAt(i--);
+        if (c < 128)
+        { // encode using utf-8
+            ba[--n] = c;
+        }
+        else if ((c > 127) && (c < 2048))
+        {
+            ba[--n] = (c & 63) | 128;
+            ba[--n] = (c >> 6) | 192;
+        }
+        else
+        {
+            ba[--n] = (c & 63) | 128;
+            ba[--n] = ((c >> 6) & 63) | 128;
+            ba[--n] = (c >> 12) | 224;
+        }
+    }
+    ba[--n] = 0;
+    var rng = new SeededRandom();
+    var x = new Array();
+    while (n > 2)
+    { // random non-zero pad
+        x[0] = 0;
+        while (x[0] == 0) rng.nextBytes(x);
+        ba[--n] = x[0];
+    }
+    ba[--n] = 2;
+    ba[--n] = 0;
+    return new BigInteger(ba);
+}
+
 // "empty" RSA key constructor
 
 
